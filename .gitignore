@@ -1,0 +1,9 @@
+saymakenv
+.env
+.terraform*
+terraform*
+
+iac
+
+__pycache__
+
