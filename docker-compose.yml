@@ -111,7 +111,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - LOAD_EX=n
+      # - LOAD_EX=n
       - EXECUTOR=DaskExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
@@ -120,7 +120,7 @@ services:
         max-size: 10m
         max-file: "3"
     volumes:
-      - ./dags:/dags
+      - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
     ports:
@@ -139,11 +139,11 @@ services:
       - webserver
         # condition: service_healthy
     volumes:
-      - ./dags:/dags
+      - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
     environment:
-      - LOAD_EX=n
+      # - LOAD_EX=n
       - EXECUTOR=DaskExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
