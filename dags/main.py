@@ -27,7 +27,7 @@ base_url = os.environ.get("BASE_URL", "https://api.open-meteo.com/v1/dwd-icon")
 default_args = {
     "owner": "admin",
     "depends_on_past": False,
-    "start_date": datetime(2024, 5, 29),
+    "start_date": datetime.today(),
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
@@ -44,7 +44,7 @@ def get_request_paramters() -> dict:
         daily = Variable.get("daily", default_var="weather_code")
         start_date = Variable.get("start_date", "2024-05-01")
         end_date = Variable.get("end_date", "2024-05-28")
-        # logger.info("Variables returned suffessfully")
+        logger.info("Variables returned suffessfully")
         return {
             "latitude": latitudes,
             "longitude": longitudes,
@@ -76,8 +76,8 @@ def get_hourly_data():
 
 def get_daily_data():
     request_parameters = get_request_paramters()
-    request_parameters.pop("hourly")
     print(request_parameters)
+    request_parameters.pop("hourly")
     formatted_params = "&".join([k+'='+str(v) for k, v in request_parameters.items()])
     url = f"{base_url}?{formatted_params}"
     print(url)
@@ -89,7 +89,7 @@ def get_daily_data():
     return response.json()
 
 
-def transform_data(data_values: dict) -> list:
+def transform_data(data_values) -> list:
     """"""
     time_data = data_values["time"]
     weather_data = data_values["weather_code"]
@@ -104,6 +104,10 @@ with DAG(
     description="dimensions and metrics for google analytics",
     schedule_interval="@daily",
 ) as ga_dimensions_metrics_dag:
+
+    @task
+    def start_task():
+        print("Let's start the task")
 
     @task
     def daily_main():
@@ -127,7 +131,11 @@ with DAG(
     def done():
         print("Done with the task")
 
-    daily_main() >> done()
+    dummy_start = start_task()
+    main_task = daily_main()
+    end_task = done()
+
+    dummy_start >> main_task >> end_task
 
 
 # if __name__ == "__main__":
