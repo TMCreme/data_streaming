@@ -125,10 +125,6 @@ services:
       - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
-      - ./config:/opt/airflow/config
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./datastore:/opt/airflow/datastore
     ports:
       - "8080:8080"
     # healthcheck:
@@ -148,10 +144,6 @@ services:
       - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
-      - ./config:/opt/airflow/config
-      - ./logs:/opt/airflow/logs
-      - ./plugins:/opt/airflow/plugins
-      - ./datastore:/opt/airflow/datastore
     environment:
       - AIRFLOW__CORE__EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
