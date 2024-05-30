@@ -127,7 +127,7 @@ with DAG(
     def done():
         print("Done with the task")
 
-    daily_main >> done
+    daily_main() >> done()
 
 
 # if __name__ == "__main__":
