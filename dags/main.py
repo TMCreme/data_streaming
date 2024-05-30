@@ -123,8 +123,10 @@ with DAG(
 
         for item in data_dict:
             item.update(response_data[0])
-        print(json.dumps(data_dict))
-        produce_message(key="hourly_data", message=data_dict)
+        json_str = json.dumps(data_dict)
+        print(json_str)
+        json_bytes = json_str.encode('utf-8')
+        produce_message(key="hourly_data", message=json_bytes)
         return data_dict
 
     @task
