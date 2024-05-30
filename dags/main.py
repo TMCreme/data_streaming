@@ -123,6 +123,12 @@ with DAG(
         produce_message(key="hourly_data", message=data_dict)
         return data_dict
 
+    @task
+    def done():
+        print("Done with the task")
+
+    daily_main >> done
+
 
 # if __name__ == "__main__":
 #     message_data = daily_main()
