@@ -116,6 +116,7 @@ services:
       - AIRFLOW_WEBSERVER_SECRET_KEY=98daee9b46da
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW_UID=1000
     logging:
       options:
         max-size: 10m
@@ -151,6 +152,7 @@ services:
       - AIRFLOW_WEBSERVER_SECRET_KEY=98daee9b46da
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW_UID=1000
     command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
     networks:
       - confluent
