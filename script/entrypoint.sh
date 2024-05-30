@@ -7,7 +7,7 @@ mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
 
 if [ -e "/opt/airflow/requirements.txt" ]; then
   $(command python) pip install --upgrade pip
-  $(command -v pip) install --user -r requirements.txt
+  $(command -v pip) install -r requirements.txt
 fi
 
 if [ ! -f "/opt/airflow/airflow.db" ]; then
