@@ -13,9 +13,9 @@ from producer import produce_message
 
 from dotenv import load_dotenv
 
-# from airflow import DAG
-# from airflow.decorators import task
-# from airflow.operators.python import PythonOperator
+from airflow import DAG
+from airflow.decorators import task
+from airflow.operators.python import PythonOperator
 
 from airflow.models import Variable
 
@@ -25,7 +25,7 @@ load_dotenv()
 
 base_url = os.environ.get("BASE_URL")
 default_args = {
-    "owner": "airflow",
+    "owner": "admin",
     "depends_on_past": False,
     "start_date": datetime(2024, 5, 29),
     "email_on_failure": False,
@@ -98,23 +98,32 @@ def transform_data(data_values: dict) -> list:
     return result
 
 
-def daily_main():
-    """"""
-    response_data = get_daily_data()
-    # data_keys = response_data["daily_units"].keys()
-    data_values = response_data[0]["daily"]
+with DAG(
+    "weather_daily_dag",
+    default_args=default_args,
+    description="dimensions and metrics for google analytics",
+    schedule_interval="0 1 * * *",
+) as ga_dimensions_metrics_dag:
 
-    data_dict = transform_data(data_values)
-    items_to_remove = ("daily_units", "daily")
-    for d in items_to_remove:
-        response_data[0].pop(d)
+    @task
+    def daily_main():
+        """"""
+        response_data = get_daily_data()
+        # data_keys = response_data["daily_units"].keys()
+        data_values = response_data[0]["daily"]
 
-    for item in data_dict:
-        item.update(response_data[0])
-    print(json.dumps(data_dict))
-    return data_dict
+        data_dict = transform_data(data_values)
+        items_to_remove = ("daily_units", "daily")
+        for d in items_to_remove:
+            response_data[0].pop(d)
+
+        for item in data_dict:
+            item.update(response_data[0])
+        print(json.dumps(data_dict))
+        produce_message(key="hourly_data", message=data_dict)
+        return data_dict
 
 
-if __name__ == "__main__":
-    message_data = daily_main()
-    produce_message(key="hourly_data", message=message_data)
+# if __name__ == "__main__":
+#     message_data = daily_main()
+#     produce_message(key="hourly_data", message=message_data)
