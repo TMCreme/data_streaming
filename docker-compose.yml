@@ -117,15 +117,16 @@ services:
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW_UID=1000
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
+    # logging:
+    #   options:
+    #     max-size: 10m
+    #     max-file: "3"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
       - ./logs:/opt/airflow/logs
+    user: "${AIRFLOW_UID:-50000}:0"
     ports:
       - "8080:8080"
     # healthcheck:
@@ -146,6 +147,7 @@ services:
       - ./script/entrypoint.sh:/opt/airflow/script/entrypoint.sh
       - ./requirements.txt:/opt/airflow/requirements.txt
       - ./logs:/opt/airflow/logs
+    user: "${AIRFLOW_UID:-50000}:0"
     environment:
       - EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
