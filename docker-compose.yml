@@ -114,8 +114,8 @@ services:
       - AIRFLOW__CORE__EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=airflow
-      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION='true'
-      - AIRFLOW__CORE__LOAD_EXAMPLES='false'
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__API__AUTH_BACKENDS='airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     logging:
       options:
@@ -156,8 +156,8 @@ services:
       - AIRFLOW__CORE__EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=airflow
-      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION='true'
-      - AIRFLOW__CORE__LOAD_EXAMPLES='false'
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__API__AUTH_BACKENDS='airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
     networks:
