@@ -1,4 +1,7 @@
 requests
 confluent-kafka
 pyspark
-
+dask 
+distributed
+confluent-kafka
+cassandra-driver
