@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-AIRFLOW_UID=5000
+# AIRFLOW_UID=5000
 mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
-chown -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins}
+chown -R "airflow:0" /opt/airflow/{logs,dags,plugins}
 
 if [ -e "/opt/airflow/requirements.txt" ]; then
   $(command python) pip install --upgrade pip
