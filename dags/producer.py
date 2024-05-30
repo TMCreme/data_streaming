@@ -17,9 +17,12 @@ producer = Producer(conf)
 
 def produce_message(key, message):
     """Message production"""
+    print("Producing the message")
 
     producer.produce(daily_topic, key=key, value=message,  callback=acked)
+    print("Message published")
     producer.poll(1)
+    print("Polling the messages")
 
 
 def acked(err, msg):
