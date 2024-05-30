@@ -5,9 +5,11 @@ import os
 import requests
 # import time
 import json
-import math
+# import math
 # import logging
 from datetime import datetime, timedelta
+
+from producer import produce_message
 
 from dotenv import load_dotenv
 
@@ -40,8 +42,8 @@ def get_request_paramters() -> dict:
         hourly = Variable.get(
             "hourly", "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,surface_pressure,temperature_80m")
         daily = Variable.get("daily", default_var="weather_code")
-        start_date = Variable.get("start_date", "2024-01-01")
-        end_date = Variable.get("end_date", "2024-05-01")
+        start_date = Variable.get("start_date", "2024-05-01")
+        end_date = Variable.get("end_date", "2024-05-28")
         # logger.info("Variables returned suffessfully")
         return {
             "latitude": latitudes,
@@ -82,9 +84,37 @@ def get_daily_data():
     headers = {}
 
     response = requests.get(url, headers=headers)
+    # constant_pair = response.json()
+    print(response.json())
+    return response.json()
 
-    print(response.text)
+
+def transform_data(data_values: dict) -> list:
+    """"""
+    time_data = data_values["time"]
+    weather_data = data_values["weather_code"]
+    result = [{"date_time": date, "weather_value": value} for date, value in zip(time_data, weather_data)]
+
+    return result
+
+
+def daily_main():
+    """"""
+    response_data = get_daily_data()
+    # data_keys = response_data["daily_units"].keys()
+    data_values = response_data[0]["daily"]
+
+    data_dict = transform_data(data_values)
+    items_to_remove = ("daily_units", "daily")
+    for d in items_to_remove:
+        response_data[0].pop(d)
+
+    for item in data_dict:
+        item.update(response_data[0])
+    print(json.dumps(data_dict))
+    return data_dict
 
 
 if __name__ == "__main__":
-    get_daily_data()
+    message_data = daily_main()
+    produce_message(key="hourly_data", message=message_data)
