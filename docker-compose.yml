@@ -178,6 +178,8 @@ services:
     ports:
       - "9090:8080"
       - "7077:7077"
+    volumes:
+      - ./dags:/opt/airflow/dags
     networks:
       - confluent
 
@@ -186,6 +188,8 @@ services:
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
+    volumes:
+      - ./dags:/opt/airflow/dags
     environment:
       SPARK_MODE: worker
       SPARK_WORKER_CORES: 2

@@ -15,7 +15,8 @@ from dotenv import load_dotenv
 
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.python import PythonOperator
+# from airflow.operators.python import PythonOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
 from airflow.models import Variable
 
@@ -129,6 +130,20 @@ with DAG(
         produce_message(key="hourly_data", message=json_bytes)
         return data_dict
 
+    spark_processing = SparkSubmitOperator(
+        task_id='spark_processor_task',
+        conn_id='spark_default',
+        application="/opt/airflow/dags/spark_stream.py",
+        total_executor_cores=3,
+        executor_memory="4g",
+        conf={
+            "spark.network.timeout": 1000000,
+            "spark.executor.heartbeatInterval": 100000,
+            "spark.storage.blockManagerSlaveTimeoutMs": 100000,
+            "spark.driver.maxResultSize": "10g"
+        }
+    )
+
     @task
     def done():
         print("Done with the task")
@@ -137,7 +152,7 @@ with DAG(
     main_task = daily_main()
     end_task = done()
 
-    dummy_start >> main_task >> end_task
+    dummy_start >> main_task >> spark_processing >> end_task
 
 
 # if __name__ == "__main__":
