@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession
 from cassandra.cluster import Cluster
 
 logger = logging.getLogger(__name__)
-daily_topic = os.environ.get("DAILY_DATA_TOPIC")
+daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
 
 def spark_connect():

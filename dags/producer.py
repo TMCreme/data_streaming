@@ -8,7 +8,7 @@ from confluent_kafka import Producer
 
 load_dotenv()
 
-daily_topic = os.environ.get("DAILY_DATA_TOPIC")
+daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 conf = {'bootstrap.servers': 'broker:9092',
         'client.id': socket.gethostname()}
 

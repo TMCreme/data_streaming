@@ -6,7 +6,7 @@ import requests
 # import time
 import json
 # import math
-# import logging
+import logging
 from datetime import datetime, timedelta
 
 from producer import produce_message
@@ -21,9 +21,9 @@ from airflow.models import Variable
 
 load_dotenv()
 
-# logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-base_url = os.environ.get("BASE_URL")
+base_url = os.environ.get("BASE_URL", "https://api.open-meteo.com/v1/dwd-icon")
 default_args = {
     "owner": "admin",
     "depends_on_past": False,
