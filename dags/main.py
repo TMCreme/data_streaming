@@ -102,7 +102,7 @@ with DAG(
     "weather_daily_dag",
     default_args=default_args,
     description="dimensions and metrics for google analytics",
-    schedule_interval="0 1 * * *",
+    schedule_interval="@daily",
 ) as ga_dimensions_metrics_dag:
 
     @task
