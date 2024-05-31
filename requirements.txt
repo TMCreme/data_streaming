@@ -6,3 +6,4 @@ distributed
 confluent-kafka
 cassandra-driver
 apache-airflow-providers-apache-spark
+kafka-python

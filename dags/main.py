@@ -127,7 +127,7 @@ with DAG(
         json_str = json.dumps(data_dict)
         print(json_str)
         json_bytes = json_str.encode('utf-8')
-        produce_message(key="hourly_data", message=json_bytes)
+        produce_message(key="daily_data", message=json_bytes)
         return data_dict
 
     spark_processing = SparkSubmitOperator(
@@ -142,7 +142,7 @@ with DAG(
             "spark.storage.blockManagerSlaveTimeoutMs": 100000,
             "spark.driver.maxResultSize": "10g"
         },
-        packages="org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,com.datastax.spark:spark-cassandra-connector_2.12:2.5.1"
+        packages="org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0,com.datastax.spark:spark-cassandra-connector_2.13:3.5.0"
     )
 
     @task
