@@ -61,8 +61,8 @@ def produce_message(message):
 
     producer.send(daily_topic, value=message)
     print(f"Message published: {message}")
-    producer.flush()
-    print("Flushing the messages")
+    # producer.flush()
+    # print("Flushing the messages")
     return True
 
 
