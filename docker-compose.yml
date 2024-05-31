@@ -15,31 +15,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   kafka:
-    image: wurstmeister/kafka:latest
+    # image: wurstmeister/kafka:latest
+    image: docker.io/bitnami/kafka:3.7
     hostname: kafka
     container_name: kafka
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
-      # - "29092:29092"
+    volumes:
+      - "kafka_data:/bitnami"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "dailymetrics:1:1,hourlymetrics:1:1"
-    # networks:
-    #   - confluent
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CREATE_TOPICS="dailymetrics:1:1,hourlymetrics:1:1"
+    networks:
+      - confluent
     # healthcheck:
     #   test: [ "CMD", "bash", "-c", 'nc -z localhost 29092' ]
     #   interval: 10s
@@ -79,8 +81,8 @@ services:
     #   interval: 30s
     #   timeout: 30s
     #   retries: 3
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   scheduler:
     # image: apache/airflow:2.9.1-python3.9
@@ -104,8 +106,8 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW_UID=${AIRFLOW_UID}
     command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   postgres:
     image: postgres:14.0
@@ -117,8 +119,8 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   spark-master:
     image: bitnami/spark:3.5.0
@@ -128,8 +130,8 @@ services:
       - "7077:7077"
     volumes:
       - ./dags:/opt/airflow/dags
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   spark-worker:
     image: bitnami/spark:3.5.0
@@ -143,8 +145,8 @@ services:
       SPARK_WORKER_CORES: 2
       SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
   cassandra_db:
     image: cassandra:latest
@@ -157,8 +159,9 @@ services:
       - HEAP_NEWSIZE=100M
       - CASSANDRA_USERNAME=cassandra
       - CASSANDRA_PASSWORD=cassandra
-    # networks:
-    #   - confluent
+    networks:
+      - confluent
 
 networks:
   confluent:
+    driver: bridge

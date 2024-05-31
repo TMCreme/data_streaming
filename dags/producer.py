@@ -17,7 +17,13 @@ bootstrap_servers = 'kafka:9092'
 producer = KafkaProducer(
     bootstrap_servers=bootstrap_servers,
     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-    acks='all')
+    acks='all',
+    retries=5,
+    linger_ms=10,
+    buffer_memory=33554432,
+    max_block_ms=60000,
+    api_version=(0,1,0)
+    )
 
 
 # async def produce_message(message):
@@ -59,15 +65,17 @@ def produce_message(message):
     """Message production"""
     print("Producing the message")
 
-    future = producer.send(daily_topic, value=message)
     try:
-        record_metadata = future.get(timeout=10)
+        future = producer.send(daily_topic, value=message)
+        record_metadata = future.get(timeout=60)
     except Exception as e:
         print(f"Error sending message: {e}")
     else:
         print(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} offset {record_metadata.offset}")
     # print(f"Message published: {message}")
-    producer.flush()
+    # metrics = producer.metrics()
+    # print(metrics)
+    # producer.flush()
     # print("Flushing the messages")
     producer.close()
     return True
@@ -98,3 +106,12 @@ def consume_message():
 # # Wait up to 1 second for events. Callbacks will be invoked during
 # # this method call if the message is acknowledged.
 # producer.poll(1)
+
+
+# if __name__ == "__main__":
+#     message = [1,2,3,4,5,6]
+
+#     for _ in range(5):
+#         produce_message(message=message)
+    
+#     consume_message()
