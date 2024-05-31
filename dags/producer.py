@@ -5,8 +5,8 @@ import os
 import json
 # import socket
 from dotenv import load_dotenv
-from kafka import KafkaProducer
-from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from kafka import KafkaProducer, KafkaConsumer
+# from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 # import asyncio
 
 load_dotenv()
@@ -63,6 +63,18 @@ def produce_message(message):
     print(f"Message published: {message}")
     # producer.flush()
     # print("Flushing the messages")
+    return True
+
+
+def consume_message():
+    """Read the message from the topic"""
+    consumer = KafkaConsumer(
+        daily_topic,
+        bootstrap_servers=[bootstrap_servers])
+    for message in consumer:
+        print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+                                          message.offset, message.key,
+                                          message.value))
     return True
 
 
