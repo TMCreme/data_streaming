@@ -11,7 +11,7 @@ import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from producer import produce_message
+from producer import produce_message, consume
 
 from dotenv import load_dotenv
 
@@ -130,6 +130,7 @@ with DAG(
         print(json_str)
         json_bytes = json_str.encode('utf-8')
         asyncio.run(produce_message(message=json_bytes))
+        asyncio.run(consume())
         return data_dict
 
     spark_processing = SparkSubmitOperator(

@@ -5,17 +5,14 @@ import os
 # import socket
 from dotenv import load_dotenv
 # from kafka import KafkaProducer
-from aiokafka import AIOKafkaProducer
+from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 import asyncio
 
 load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
-# conf = {'bootstrap.servers': 'broker:9092',
-#         'client.id': socket.gethostname()}
 
 bootstrap_servers = 'kafka:9092'
-# producer = KafkaProducer(bootstrap_servers='broker:9092')
 
 
 async def produce_message(message):
@@ -33,6 +30,24 @@ async def produce_message(message):
         await producer.stop()
 
 # asyncio.run(send_one())
+
+
+async def consume():
+    consumer = AIOKafkaConsumer(
+        daily_topic,
+        bootstrap_servers=bootstrap_servers)
+    # Get cluster layout and join group `my-group`
+    await consumer.start()
+    try:
+        # Consume messages
+        async for msg in consumer:
+            print("consumed: ", msg.topic, msg.partition, msg.offset,
+                  msg.key, msg.value, msg.timestamp)
+    finally:
+        # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()
+
+# asyncio.run(consume())
 
 
 # def produce_message(key, message):

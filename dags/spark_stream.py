@@ -34,7 +34,7 @@ def read_stream(spark_session):
     df = spark_session \
         .readStream \
         .format("kafka") \
-        .option("kafka.bootstrap.servers", "broker:9092") \
+        .option("kafka.bootstrap.servers", "kafka:9092") \
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "latest") \
         .load()
