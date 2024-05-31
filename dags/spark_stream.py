@@ -79,7 +79,7 @@ def create_table(session):
         timezone TEXT,
         timezone_abbreviation TEXT,
         elevation DECIMAL,
-        weather_value DECIMAL;
+        weather_value DECIMAL)
     """)
 
     print("Table created successfully!")
