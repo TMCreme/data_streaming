@@ -17,7 +17,7 @@ bootstrap_servers = 'kafka:9092'
 producer = KafkaProducer(
     bootstrap_servers=bootstrap_servers,
     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-    acks=1)
+    acks='all')
 
 
 # async def produce_message(message):
@@ -70,6 +70,7 @@ def consume_message():
     """Read the message from the topic"""
     consumer = KafkaConsumer(
         daily_topic,
+        group_id="dailymetricsconsumergroup",
         bootstrap_servers=[bootstrap_servers])
     for message in consumer:
         print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
