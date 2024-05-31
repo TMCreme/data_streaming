@@ -59,10 +59,17 @@ def produce_message(message):
     """Message production"""
     print("Producing the message")
 
-    producer.send(daily_topic, value=message)
-    print(f"Message published: {message}")
-    # producer.flush()
+    future = producer.send(daily_topic, value=message)
+    try:
+        record_metadata = future.get(timeout=10)
+    except Exception as e:
+        print(f"Error sending message: {e}")
+    else:
+        print(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} offset {record_metadata.offset}")
+    # print(f"Message published: {message}")
+    producer.flush()
     # print("Flushing the messages")
+    producer.close()
     return True
 
 
@@ -73,7 +80,7 @@ def consume_message():
         group_id="dailymetricsconsumergroup",
         bootstrap_servers=[bootstrap_servers])
     for message in consumer:
-        print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+        print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
                                           message.offset, message.key,
                                           message.value))
     return True
