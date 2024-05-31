@@ -76,7 +76,7 @@ def create_cassandra_connection():
 def create_table(session):
     session.execute("""
     CREATE TABLE IF NOT EXISTS analytics.hourlydata (
-        id TEXT,
+        id TEXT PRIMARY KEY,
         latitude DECIMAL,
         longitude DECIMAL,
         date_time DATE,
