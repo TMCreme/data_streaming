@@ -7,7 +7,9 @@ import requests
 import json
 # import math
 import logging
+import asyncio
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from producer import produce_message
 
@@ -94,7 +96,7 @@ def transform_data(data_values) -> list:
     """"""
     time_data = data_values["time"]
     weather_data = data_values["weather_code"]
-    result = [{"date_time": date, "weather_value": value} for date, value in zip(time_data, weather_data)]
+    result = [{"id": str(uuid4()), "date_time": date, "weather_value": value} for date, value in zip(time_data, weather_data)]
 
     return result
 
@@ -127,7 +129,7 @@ with DAG(
         json_str = json.dumps(data_dict)
         print(json_str)
         json_bytes = json_str.encode('utf-8')
-        produce_message(key="daily_data", message=json_bytes)
+        asyncio.run(produce_message(message=json_bytes))
         return data_dict
 
     spark_processing = SparkSubmitOperator(
@@ -142,7 +144,7 @@ with DAG(
             "spark.storage.blockManagerSlaveTimeoutMs": 100000,
             "spark.driver.maxResultSize": "10g"
         },
-        packages="org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0,com.datastax.spark:spark-cassandra-connector_2.13:3.5.0"
+        packages="org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0,com.github.jnr:jnr-posix:3.1.15"
     )
 
     @task

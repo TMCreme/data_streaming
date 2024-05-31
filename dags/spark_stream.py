@@ -45,9 +45,15 @@ def read_stream(spark_session):
 def write_stream_data():
     spark = spark_connect()
     stream_data = read_stream(spark)
+    stream_data.writeStream\
+        .format("console")\
+        .outputMode("append")\
+        .start()
+
     query = stream_data.writeStream\
         .option("checkpointLocation", '/tmp/check_point/')\
         .format("org.apache.spark.sql.cassandra")\
+        .option("spark.cassandra.connection.host", "cassandra_db")\
         .option("keyspace", "analytics")\
         .option("table", "hourlydata")\
         .start()
@@ -57,7 +63,7 @@ def write_stream_data():
 def create_cassandra_connection():
     try:
         # connecting to the cassandra cluster
-        cluster = Cluster(['cassandra_db'], port=9042)
+        cluster = Cluster(['cassandra_db'], port=9042, )
 
         cas_session = cluster.connect()
 
@@ -70,7 +76,7 @@ def create_cassandra_connection():
 def create_table(session):
     session.execute("""
     CREATE TABLE IF NOT EXISTS analytics.hourlydata (
-        id INT PRIMARY KEY,
+        id TEXT,
         latitude DECIMAL,
         longitude DECIMAL,
         date_time DATE,
