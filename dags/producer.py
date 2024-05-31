@@ -16,7 +16,8 @@ daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 bootstrap_servers = 'kafka:9092'
 producer = KafkaProducer(
     bootstrap_servers=bootstrap_servers,
-    value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+    acks=1)
 
 
 # async def produce_message(message):
