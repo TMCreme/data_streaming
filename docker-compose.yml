@@ -39,7 +39,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
       KAFKA_LISTENERS: PLAINTEXT://broker:9092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -49,19 +48,19 @@ services:
       KAFKA_CREATE_TOPICS: "dailymetrics:1:1,hourlymetrics:1:1"
     networks:
       - confluent
-    healthcheck:
-      test: [ "CMD", "bash", "-c", 'nc -z localhost 9092' ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # healthcheck:
+    #   test: [ "CMD", "bash", "-c", 'nc -z localhost 29092' ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.1
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
-      broker:
-        condition: service_healthy
+      - broker
+        # condition: service_healthy
     ports:
       - "8081:8081"
     environment:
@@ -81,10 +80,10 @@ services:
     hostname: control-center
     container_name: control-center
     depends_on:
-      broker:
-        condition: service_healthy
-      schema-registry:
-        condition: service_healthy
+      - broker
+        # condition: service_healthy
+      - schema-registry
+        # condition: service_healthy
     ports:
       - "9021:9021"
     environment:
