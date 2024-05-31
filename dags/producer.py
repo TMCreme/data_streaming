@@ -21,8 +21,8 @@ def produce_message(key, message):
 
     producer.send(daily_topic, key=key, value=message)
     print("Message published")
-    producer.flush()
-    print("Polling the messages")
+    # producer.flush()
+    # print("Polling the messages")
 
 
 def acked(err, msg):
