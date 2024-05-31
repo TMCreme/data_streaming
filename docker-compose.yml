@@ -165,3 +165,7 @@ services:
 networks:
   confluent:
     driver: bridge
+
+volumes:
+  kafka_data:
+    driver: local
