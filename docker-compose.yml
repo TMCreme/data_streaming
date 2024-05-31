@@ -15,8 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   kafka:
     image: wurstmeister/kafka:latest
@@ -38,8 +38,8 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CREATE_TOPICS: "dailymetrics:1:1,hourlymetrics:1:1"
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
     # healthcheck:
     #   test: [ "CMD", "bash", "-c", 'nc -z localhost 29092' ]
     #   interval: 10s
@@ -58,7 +58,7 @@ services:
     environment:
       - EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-      - AIRFLOW_WEBSERVER_SECRET_KEY=98daee9b46da
+      - AIRFLOW_WEBSERVER_SECRET_KEY=da8wo12mwu8adsiwla03eneuap
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW_UID=1000
@@ -79,8 +79,8 @@ services:
     #   interval: 30s
     #   timeout: 30s
     #   retries: 3
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   scheduler:
     # image: apache/airflow:2.9.1-python3.9
@@ -99,13 +99,13 @@ services:
     environment:
       - EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-      - AIRFLOW_WEBSERVER_SECRET_KEY=98daee9b46da
+      - AIRFLOW_WEBSERVER_SECRET_KEY=da8wo12mwu8adsiwla03eneuap
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW_UID=1000
     command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   postgres:
     image: postgres:14.0
@@ -117,8 +117,8 @@ services:
       options:
         max-size: 10m
         max-file: "3"
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   spark-master:
     image: bitnami/spark:3.5.0
@@ -128,8 +128,8 @@ services:
       - "7077:7077"
     volumes:
       - ./dags:/opt/airflow/dags
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   spark-worker:
     image: bitnami/spark:3.5.0
@@ -143,8 +143,8 @@ services:
       SPARK_WORKER_CORES: 2
       SPARK_WORKER_MEMORY: 1g
       SPARK_MASTER_URL: spark://spark-master:7077
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
   cassandra_db:
     image: cassandra:latest
@@ -157,8 +157,8 @@ services:
       - HEAP_NEWSIZE=100M
       - CASSANDRA_USERNAME=cassandra
       - CASSANDRA_PASSWORD=cassandra
-    networks:
-      - confluent
+    # networks:
+    #   - confluent
 
 networks:
   confluent:
