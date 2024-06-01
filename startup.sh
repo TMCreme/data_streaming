@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+sudo apt install -y acl
+
 mkdir -p ./dags ./logs
 chmod -R +x script
 
