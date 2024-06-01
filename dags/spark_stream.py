@@ -5,11 +5,30 @@ Loading to Cassadra
 import os
 import logging
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col
+from pyspark.sql.types import (
+    StringType, StructType, IntegerType,
+    DecimalType, TimestampType
+)
 
 from cassandra.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
+
+sample_schema = (
+    StructType()
+    .add("id", IntegerType())
+    .add("latitude" , DecimalType())
+    .add("longitude", DecimalType())
+    .add("date_time", TimestampType())
+    .add("generationtime_ms", DecimalType())
+    .add("utc_offset_seconds", DecimalType())
+    .add("timezone", StringType())
+    .add("timezone_abbreviation", StringType())
+    .add("elevation", DecimalType())
+    .add("weather_value", DecimalType())
+)
 
 
 def spark_connect():
@@ -37,14 +56,17 @@ def read_stream(spark_session):
         .option("kafka.bootstrap.servers", "kafka:9092") \
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "latest") \
-        .load()
-    my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
-    return my_df
+        .load()\
+        .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        .select("data.*")
+    # my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
+    return df
 
 
 def write_stream_data():
     spark = spark_connect()
     stream_data = read_stream(spark)
+    stream_data.printSchema()
     stream_data.writeStream\
         .format("console")\
         .outputMode("append")\

@@ -11,7 +11,7 @@ import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from producer import produce_message, basic_consume_loop
+from producer import produce_message, basic_consume_loop, consumer, daily_topic
 
 from dotenv import load_dotenv
 
@@ -114,14 +114,16 @@ def daily_main():
     for d in items_to_remove:
         response_data[0].pop(d)
 
+    i = 0
     for item in data_dict:
         item.update(response_data[0])
-    json_str = json.dumps(data_dict)
-    print(json_str)
+        yield (json.dumps(i), json.dumps(item))
+    # json_str =json.dumps(data_dict)
+    # print(json_str)
     # json_bytes = json_str.encode('utf-8')
-    produce_message(message=data_dict)
+    #produce_message(message=data_dict)
     # asyncio.run(consume())
-    return data_dict
+    #return (datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f'), json_str)
 
 
 with DAG(
@@ -136,7 +138,7 @@ with DAG(
         print("Let's start the task")
 
     # @task
-    
+
     produce_daily_metrics = ProduceToTopicOperator(
         task_id="produce_daily_metrics",
         kafka_config_id="kafka_default",
@@ -145,11 +147,11 @@ with DAG(
         poll_timeout=10,
     )
 
-    
-    @task
-    def first_consume():
-        basic_consume_loop()
-        print("Done with the task")
+
+    # @task
+    # def first_consume():
+    #     basic_consume_loop(consumer, [daily_topic])
+    #     print("Done with the task")
 
     spark_processing = SparkSubmitOperator(
         task_id='spark_processor_task',
@@ -173,9 +175,9 @@ with DAG(
     dummy_start = start_task()
     # main_task = daily_main()
     end_task = done()
-    initial_consume = first_consume()
+    # initial_consume = first_consume()
 
-    dummy_start >> produce_daily_metrics >> initial_consume >> spark_processing >> end_task
+    dummy_start >> produce_daily_metrics >> spark_processing >> end_task
 
 
 # if __name__ == "__main__":
