@@ -19,6 +19,7 @@ from airflow import DAG
 from airflow.decorators import task
 # from airflow.operators.python import PythonOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.providers.apache.kafka.operators.produce import ProduceToTopicOperator
 
 from airflow.models import Variable
 
@@ -27,6 +28,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 base_url = os.environ.get("BASE_URL", "https://api.open-meteo.com/v1/dwd-icon")
+daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 default_args = {
     "owner": "admin",
     "depends_on_past": False,
@@ -101,10 +103,31 @@ def transform_data(data_values) -> list:
     return result
 
 
+def daily_main():
+    """"""
+    response_data = get_daily_data()
+    # data_keys = response_data["daily_units"].keys()
+    data_values = response_data[0]["daily"]
+
+    data_dict = transform_data(data_values)
+    items_to_remove = ("daily_units", "daily")
+    for d in items_to_remove:
+        response_data[0].pop(d)
+
+    for item in data_dict:
+        item.update(response_data[0])
+    json_str = json.dumps(data_dict)
+    print(json_str)
+    # json_bytes = json_str.encode('utf-8')
+    produce_message(message=data_dict)
+    # asyncio.run(consume())
+    return data_dict
+
+
 with DAG(
     "weather_daily_dag",
     default_args=default_args,
-    description="dimensions and metrics for google analytics",
+    description="Weather metrics data streaming",
     schedule_interval="@daily",
 ) as ga_dimensions_metrics_dag:
 
@@ -112,26 +135,16 @@ with DAG(
     def start_task():
         print("Let's start the task")
 
-    @task
-    def daily_main():
-        """"""
-        response_data = get_daily_data()
-        # data_keys = response_data["daily_units"].keys()
-        data_values = response_data[0]["daily"]
+    # @task
+    
+    produce_daily_metrics = ProduceToTopicOperator(
+        task_id="produce_daily_metrics",
+        kafka_config_id="kafka_default",
+        topic=daily_topic,
+        producer_function=daily_main,
+        poll_timeout=10,
+    )
 
-        data_dict = transform_data(data_values)
-        items_to_remove = ("daily_units", "daily")
-        for d in items_to_remove:
-            response_data[0].pop(d)
-
-        for item in data_dict:
-            item.update(response_data[0])
-        json_str = json.dumps(data_dict)
-        print(json_str)
-        # json_bytes = json_str.encode('utf-8')
-        produce_message(message=data_dict)
-        # asyncio.run(consume())
-        return data_dict
     
     @task
     def first_consume():
@@ -158,11 +171,11 @@ with DAG(
         print("Done with the task")
 
     dummy_start = start_task()
-    main_task = daily_main()
+    # main_task = daily_main()
     end_task = done()
     initial_consume = first_consume()
 
-    dummy_start >> main_task >> initial_consume >> spark_processing >> end_task
+    dummy_start >> produce_daily_metrics >> initial_consume >> spark_processing >> end_task
 
 
 # if __name__ == "__main__":
