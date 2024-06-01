@@ -14,7 +14,7 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = 'kafka:9092'
+bootstrap_servers = '3.255.212.165:29092'
 config = {
     "bootstrap.servers": bootstrap_servers,
     "queue.buffering.max.messages": 1,
@@ -89,6 +89,7 @@ def basic_consume_loop(consumer, topics):
     finally:
         # Close down consumer to commit final offsets.
         consumer.close()
+        shutdown()
 
 def msg_process(message):
     print(f"Processing messag {message}")
@@ -103,6 +104,6 @@ def shutdown():
 #     for i in range(5):
 #         produce_message(message=message)
 #         print(f"Iteration: {i+1}")
-#     # producer.flush()
+#     # p.close()
     
 #     basic_consume_loop(consumer, [daily_topic])
