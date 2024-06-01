@@ -171,3 +171,4 @@ services:
 
 networks:
   confluent:
+    driver: bridge
