@@ -14,7 +14,13 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = 'kafka:9092'
+bootstrap_servers = 'kafka:29092'
+config = {
+    "bootstrap.servers": bootstrap_servers,
+    "queue.buffering.max.messages": 1,
+    "queue.buffering.max.ms": 0,
+    "batch.num.messages": 1
+    }
 # producer = KafkaProducer(
 #     bootstrap_servers=bootstrap_servers,
 #     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
@@ -49,18 +55,23 @@ def produce_message(message):
     # be triggered from the call to poll() above, or flush() below, when the
     # message has been successfully delivered or failed permanently.
     p.produce(daily_topic, json.dumps(message).encode('utf-8'), callback=delivery_report)
+    print("Message produced Successfully")
 
     # Wait for any outstanding messages to be delivered and delivery report
     # callbacks to be triggered.
     p.flush()
+    print("Topic Flushed")
 
 
 def consume_message():
     """Read the message from the topic"""
+    print("About to consume")
     consumer = KafkaConsumer(
         daily_topic,
-        group_id="dailymetricsconsumergroup",
-        bootstrap_servers=[bootstrap_servers])
+        # group_id="dailymetricsconsumergroup",
+        bootstrap_servers=[bootstrap_servers],
+        api_version=(0,1,0)
+        )
     for message in consumer:
         print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
                                           message.offset, message.key,
@@ -69,9 +80,11 @@ def consume_message():
 
 
 # if __name__ == "__main__":
-#     message = json.dumps([1,2,3,4,5,6])
+#     message = [1,2,3,4,5,6]
 
-#     for _ in range(5):
+#     for i in range(5):
 #         produce_message(message=message)
+#         print(f"Iteration: {i+1}")
+#     # producer.flush()
     
 #     consume_message()
