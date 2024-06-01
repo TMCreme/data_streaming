@@ -14,7 +14,7 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = '52.16.82.204:9092'
+bootstrap_servers = '52.16.82.204:29092'
 config = {
     "bootstrap.servers": bootstrap_servers,
     "queue.buffering.max.messages": 1,
