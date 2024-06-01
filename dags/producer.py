@@ -14,7 +14,7 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = 'kafka:29092'
+bootstrap_servers = 'kafka:9092'
 config = {
     "bootstrap.servers": bootstrap_servers,
     "queue.buffering.max.messages": 1,
@@ -54,7 +54,7 @@ def produce_message(message):
     # Asynchronously produce a message. The delivery report callback will
     # be triggered from the call to poll() above, or flush() below, when the
     # message has been successfully delivered or failed permanently.
-    p.produce(daily_topic, json.dumps(message).encode('utf-8'), callback=delivery_report)
+    p.produce(daily_topic, json.dumps(message).encode('utf-8'))
     print("Message produced Successfully")
 
     # Wait for any outstanding messages to be delivered and delivery report
