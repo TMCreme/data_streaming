@@ -11,7 +11,7 @@ import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from producer import produce_message, consume_message
+from producer import produce_message, basic_consume_loop
 
 from dotenv import load_dotenv
 
@@ -135,7 +135,7 @@ with DAG(
     
     @task
     def first_consume():
-        consume_message()
+        basic_consume_loop()
         print("Done with the task")
 
     spark_processing = SparkSubmitOperator(

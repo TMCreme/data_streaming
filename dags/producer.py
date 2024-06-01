@@ -6,7 +6,7 @@ import json
 # import socket
 from dotenv import load_dotenv
 from kafka import KafkaProducer, KafkaConsumer
-from confluent_kafka import Producer
+from confluent_kafka import Producer, Consumer, KafkaError, KafkaException
 # from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 # import asyncio
 
@@ -14,7 +14,7 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = 'kafka:29092'
+bootstrap_servers = '52.16.82.204:9092'
 config = {
     "bootstrap.servers": bootstrap_servers,
     "queue.buffering.max.messages": 1,
@@ -63,20 +63,38 @@ def produce_message(message):
     print("Topic Flushed")
 
 
-def consume_message():
-    """Read the message from the topic"""
-    print("About to consume")
-    consumer = KafkaConsumer(
-        daily_topic,
-        # group_id="dailymetricsconsumergroup",
-        bootstrap_servers=[bootstrap_servers],
-        api_version=(0,1,0)
-        )
-    for message in consumer:
-        print("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
-                                          message.offset, message.key,
-                                          message.value))
-    return True
+consumer_conf = {'bootstrap.servers': bootstrap_servers,
+    'group.id': 'dailymetricsconsumergroup',
+    'auto.offset.reset': 'smallest'}
+consumer = Consumer(consumer_conf)
+running = True
+
+def basic_consume_loop(consumer, topics):
+    try:
+        consumer.subscribe(topics)
+
+        while running:
+            msg = consumer.poll(timeout=1.0)
+            if msg is None: continue
+
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    # End of partition event
+                    print('%% %s [%d] reached end at offset %d\n' %
+                                     (msg.topic(), msg.partition(), msg.offset()))
+                elif msg.error():
+                    raise KafkaException(msg.error())
+            else:
+                msg_process(msg.value())
+    finally:
+        # Close down consumer to commit final offsets.
+        consumer.close()
+
+def msg_process(message):
+    print(f"Processing messag {message}")
+
+def shutdown():
+    running = False
 
 
 # if __name__ == "__main__":
@@ -87,4 +105,4 @@ def consume_message():
 #         print(f"Iteration: {i+1}")
 #     # producer.flush()
     
-#     consume_message()
+#     basic_consume_loop(consumer, [daily_topic])
