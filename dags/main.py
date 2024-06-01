@@ -157,13 +157,13 @@ with DAG(
         task_id='spark_processor_task',
         conn_id='spark_default',
         application="/opt/airflow/dags/spark_stream.py",
-        total_executor_cores=3,
-        executor_memory="4g",
+        total_executor_cores=4,
+        executor_memory="12g",
         conf={
             "spark.network.timeout": 1000000,
             "spark.executor.heartbeatInterval": 100000,
             "spark.storage.blockManagerSlaveTimeoutMs": 100000,
-            "spark.driver.maxResultSize": "10g"
+            "spark.driver.maxResultSize": "20g"
         },
         packages="org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,com.datastax.spark:spark-cassandra-connector_2.12:3.5.0,com.github.jnr:jnr-posix:3.1.15"
     )
