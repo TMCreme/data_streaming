@@ -14,17 +14,17 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = '52.30.42.41:9092'
-producer = KafkaProducer(
-    bootstrap_servers=bootstrap_servers,
-    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-    acks='all',
-    retries=5,
-    linger_ms=10,
-    buffer_memory=33554432,
-    max_block_ms=60000,
-    api_version=(0,1,0)
-    )
+bootstrap_servers = 'kafka:9092'
+# producer = KafkaProducer(
+#     bootstrap_servers=bootstrap_servers,
+#     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+#     acks='all',
+#     retries=5,
+#     linger_ms=10,
+#     buffer_memory=33554432,
+#     max_block_ms=60000,
+#     api_version=(0,1,0)
+#     )
 
 
 p = Producer({'bootstrap.servers': bootstrap_servers})
@@ -48,7 +48,7 @@ def produce_message(message):
     # Asynchronously produce a message. The delivery report callback will
     # be triggered from the call to poll() above, or flush() below, when the
     # message has been successfully delivered or failed permanently.
-    p.produce('mytopic', message.encode('utf-8'), callback=delivery_report)
+    p.produce(daily_topic, json.dumps(message).encode('utf-8'), callback=delivery_report)
 
     # Wait for any outstanding messages to be delivered and delivery report
     # callbacks to be triggered.
@@ -68,10 +68,10 @@ def consume_message():
     return True
 
 
-if __name__ == "__main__":
-    message = json.dumps([1,2,3,4,5,6])
+# if __name__ == "__main__":
+#     message = json.dumps([1,2,3,4,5,6])
 
-    for _ in range(5):
-        produce_message(message=message)
+#     for _ in range(5):
+#         produce_message(message=message)
     
-    consume_message()
+#     consume_message()
