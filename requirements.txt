@@ -1,6 +1,6 @@
 requests
 confluent-kafka
-pyspark
+pyspark==3.5.0
 dask 
 distributed
 confluent-kafka
