@@ -33,10 +33,18 @@ sample_schema = (
 
 def spark_connect():
     spark = (
-        SparkSession.builder.appName("WeatherApp").getOrCreate()
+        SparkSession.builder.appName("WeatherApp")\
+            .config("spark.cassandra.connection.host", "cassandra_db")\
+            .config("spark.cassandra.connection.port", 9042)
+                .getOrCreate()
     )
     # spark.conf.set("spark.sql.shuffle.partitions", 1000)
     return spark
+
+def stop_spark(spark_session):
+    """Stop the spark session"""
+    spark_session.stop()
+    print("Spark exited successfully")
 
 
 def create_keyspace(session):
@@ -51,7 +59,7 @@ def create_keyspace(session):
 def read_stream(spark_session):
     """Define the subscription to kafka topic and read stream"""
     df = spark_session \
-        .readStream \
+        .read \
         .format("kafka") \
         .option("kafka.bootstrap.servers", "kafka:9092") \
         .option("subscribe", daily_topic) \
@@ -59,6 +67,7 @@ def read_stream(spark_session):
         .load()\
         .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
         .select("data.*")
+    df.printSchema()
     # my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
     return df
 
@@ -66,20 +75,16 @@ def read_stream(spark_session):
 def write_stream_data():
     spark = spark_connect()
     stream_data = read_stream(spark)
-    stream_data.printSchema()
-    stream_data.writeStream\
-        .format("console")\
-        .outputMode("append")\
-        .start()
-
-    query = stream_data.writeStream\
+    stream_data.write\
         .option("checkpointLocation", '/tmp/check_point/')\
         .format("org.apache.spark.sql.cassandra")\
-        .option("spark.cassandra.connection.host", "cassandra_db")\
         .option("keyspace", "analytics")\
         .option("table", "hourlydata")\
-        .start()
-    query.awaitTermination()
+        .mode("append") \
+        .save()
+        # .start()
+
+    stop_spark(spark)
 
 
 def create_cassandra_connection():
@@ -119,6 +124,7 @@ if __name__ == "__main__":
         create_keyspace(cassandra_conn)
         create_table(cassandra_conn)
         write_stream_data()
+        # stop_spark()
     else:
         logger.error("Cassandra connection failed")
         print("Cassandra connection failed")
