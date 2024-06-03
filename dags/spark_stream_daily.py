@@ -66,8 +66,8 @@ def stop_spark(spark_session):
 
 
 def create_keyspace(session):
-    session.execute(f"""
-        CREATE KEYSPACE IF NOT EXISTS {cassandra_keyspace}
+    session.execute("""
+        CREATE KEYSPACE IF NOT EXISTS analytics
         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
     """)
 
