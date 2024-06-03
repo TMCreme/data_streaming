@@ -106,20 +106,24 @@ def daily_main():
     """"""
     response_data = get_daily_data()
     # data_keys = response_data["daily_units"].keys()
+    items_to_remove = ("daily_units", "daily")
     i = 0
     for item in response_data:
-        data_values = item["daily"]
+        data_values = item.pop("daily")
+        item.pop("daily_units")
 
         data_dict = transform_data(data_values)
-        items_to_remove = ("daily_units", "daily")
-        for d in items_to_remove:
-            item.pop(d)
+        # for d in items_to_remove:
+        #     item.pop(d)
 
         for new_item in data_dict:
+            i += 1
             new_item.update(item)
-        json_str =json.dumps(data_dict)
-        print(json_str)
-        yield (json.dumps(i), json.dumps(json_str))
+            print(json.dumps(new_item))
+            yield (json.dumps(i), json.dumps(new_item))
+        # json_str =json.dumps(data_dict)
+        # print(json_str)
+        # yield (json.dumps(i), json_str)
     # json_bytes = json_str.encode('utf-8')
     #produce_message(message=data_dict)
     # asyncio.run(consume())

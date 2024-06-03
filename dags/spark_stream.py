@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
     StringType, StructType, IntegerType,
-    DecimalType, TimestampType, ArrayType
+    DecimalType, TimestampType, ArrayType, StructField
 )
 
 from cassandra.cluster import Cluster
@@ -17,6 +17,19 @@ logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 
+    
+# sample_schema = StructType([
+#     StructField("id", StringType(), True),
+#     StructField("date_time", TimestampType(), True),
+#     StructField("weather_value", DecimalType(), True),
+#     StructField("latitude" , DecimalType(), True),
+#     StructField("longitude", DecimalType(), True),
+#     StructField("generationtime_ms", DecimalType(), True),
+#     StructField("utc_offset_seconds", DecimalType(), True),
+#     StructField("timezone", StringType(), True),
+#     StructField("timezone_abbreviation", StringType(), True),
+#     StructField("elevation", DecimalType(), True)
+# ])
 sample_schema = (
     StructType()
     .add("id", StringType())
@@ -31,7 +44,7 @@ sample_schema = (
     .add("weather_value", DecimalType())
 )
 
-array_schema = ArrayType(sample_schema)
+# array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
@@ -68,33 +81,13 @@ def read_stream(spark_session):
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
-        .load()
-    
-    df = df.selectExpr("CAST(value AS STRING)")
-    parsed_df = df.withColumn("parsed_value", from_json(col("value"), array_schema))
+        .load()\
+        .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        .select("data.*")
 
-    # Explode the array into individual rows
-    exploded_df = parsed_df.select(explode(col("parsed_value")).alias("item"))
-
-    # Select the fields from the exploded items
-    final_df = exploded_df.select(
-        col("item.id"),
-        col("item.latitude"),
-        col("item.longitude"),
-        col("item.date_time"),
-        col("item.generationtime_ms"),
-        col("item.utc_offset_seconds"),
-        col("item.timezone"),
-        col("item.timezone_abbreviation"),
-        col("item.elevation"),
-        col("item.weather_value")
-        )
-        # .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
-        # .select("data.*")
-    final_df.printSchema()
-    final_df.show()
-    # my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
-    return final_df
+    df.printSchema()
+    df.show()
+    return df
 
 
 def write_stream_data():
