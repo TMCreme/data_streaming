@@ -11,8 +11,6 @@ import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from producer import produce_message, basic_consume_loop, consumer, daily_topic
-
 from dotenv import load_dotenv
 
 from airflow import DAG
@@ -29,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 base_url = os.environ.get("BASE_URL", "https://api.open-meteo.com/v1/dwd-icon")
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
+hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 default_args = {
     "owner": "admin",
     "depends_on_past": False,
@@ -107,19 +106,20 @@ def daily_main():
     """"""
     response_data = get_daily_data()
     # data_keys = response_data["daily_units"].keys()
-    data_values = response_data[0]["daily"]
-
-    data_dict = transform_data(data_values)
-    items_to_remove = ("daily_units", "daily")
-    for d in items_to_remove:
-        response_data[0].pop(d)
-
     i = 0
-    for item in data_dict:
-        item.update(response_data[0])
-        yield (json.dumps(i), json.dumps(item))
-    json_str =json.dumps(data_dict)
-    print(json_str)
+    for item in response_data:
+        data_values = item["daily"]
+
+        data_dict = transform_data(data_values)
+        items_to_remove = ("daily_units", "daily")
+        for d in items_to_remove:
+            item.pop(d)
+
+        for new_item in data_dict:
+            new_item.update(item)
+        json_str =json.dumps(data_dict)
+        print(json_str)
+        yield (json.dumps(i), json.dumps(json_str))
     # json_bytes = json_str.encode('utf-8')
     #produce_message(message=data_dict)
     # asyncio.run(consume())
