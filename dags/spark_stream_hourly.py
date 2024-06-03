@@ -133,7 +133,8 @@ def create_table(session):
         apparent_temperature DECIMAL,
         rain DECIMAL,
         surface_pressure DECIMAL,
-        temperature_80m DECIMAL)
+        temperature_80m DECIMAL,
+        precipitation DECIMAL)
     """)
 
     print("Table created successfully!")
