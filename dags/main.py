@@ -78,6 +78,7 @@ def get_hourly_data():
     response = requests.get(url, headers=headers)
 
     print(response.text)
+    return response.json()
 
 
 def get_daily_data():
