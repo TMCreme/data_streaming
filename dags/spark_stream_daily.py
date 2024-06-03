@@ -15,7 +15,9 @@ from cassandra.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
-hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
+daily_data_table_name = os.environ.get("HOURLY_SINK_TABLE", "hourlydata")
+cassandra_keyspace = os.environ.get("CASSANDRA_KEYSPACE", "analytics")
+bootstrap_server = "kafka:9092"
 
     
 # sample_schema = StructType([
@@ -64,8 +66,8 @@ def stop_spark(spark_session):
 
 
 def create_keyspace(session):
-    session.execute("""
-        CREATE KEYSPACE IF NOT EXISTS analytics
+    session.execute(f"""
+        CREATE KEYSPACE IF NOT EXISTS {cassandra_keyspace}
         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
     """)
 
@@ -77,7 +79,7 @@ def read_stream(spark_session):
     df = spark_session \
         .read \
         .format("kafka") \
-        .option("kafka.bootstrap.servers", "kafka:9092") \
+        .option("kafka.bootstrap.servers", bootstrap_server) \
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
@@ -96,8 +98,8 @@ def write_stream_data():
     stream_data.write\
         .option("checkpointLocation", '/tmp/check_point/')\
         .format("org.apache.spark.sql.cassandra")\
-        .option("keyspace", "analytics")\
-        .option("table", "dailydata")\
+        .option("keyspace", cassandra_keyspace)\
+        .option("table", daily_data_table_name)\
         .mode("append") \
         .save()
         # .start()
@@ -119,8 +121,8 @@ def create_cassandra_connection():
 
 
 def create_table(session):
-    session.execute("""
-    CREATE TABLE IF NOT EXISTS analytics.dailydata (
+    session.execute(f"""
+    CREATE TABLE IF NOT EXISTS {cassandra_keyspace}.{daily_data_table_name} (
         id TEXT PRIMARY KEY,
         latitude DECIMAL,
         longitude DECIMAL,

@@ -1,5 +1,5 @@
 """
-Daily aggregate
+Historic Data - Should be executed once without any schedule
 """
 import os
 import requests
@@ -34,8 +34,8 @@ longitudes = Variable.get("longitudes", default_var="13.4105,14.5506,9.993,11.57
 hourly = Variable.get(
     "hourly", "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,surface_pressure,temperature_80m")
 daily = Variable.get("daily", default_var="weather_code")
-start_date = datetime.today().strftime("%Y-%m-%d")
-end_date = start_date
+start_date = Variable.get("start_date", "2024-05-01")
+end_date = Variable.get("end_date", "2024-05-28")
 
 default_args = {
     "owner": "admin",
@@ -143,11 +143,11 @@ def hourly_main():
 
 
 with DAG(
-    "weather_data_dag",
+    "historic_weather_data_dag",
     default_args=default_args,
-    description="Weather metrics data streaming",
-    schedule_interval="@daily",
-) as weather_data_dag:
+    description="Historical Weather metrics data streaming",
+    schedule_interval=None,
+) as historic_weather_data_dag:
 
     @task
     def start_task():
