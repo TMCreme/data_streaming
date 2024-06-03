@@ -210,4 +210,4 @@ with DAG(
     end_task = done()
 
     dummy_start >> produce_daily_metrics >> spark_processing_daily >> end_task
-    dummy_start >> produce_hourly_metrics >> spark_processing_hourly >> end_date
+    dummy_start >> produce_hourly_metrics >> spark_processing_hourly >> end_task
