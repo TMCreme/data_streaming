@@ -38,6 +38,7 @@ sample_schema = (
     .add("rain", DecimalType(scale=4))
     .add("surface_pressure", DecimalType(scale=4))
     .add("temperature_80m", DecimalType(scale=4))
+    .add("precipitation", DecimalType(scale=4))
 )
 
 # array_schema = ArrayType(sample_schema)

@@ -136,11 +136,9 @@ def hourly_main():
         default_map = dict.fromkeys(hourly_units, 0)
         data_values = item.pop("hourly", None)
         time_data = data_values.pop("time")
-        item.update(default_map)
+        # item.update(default_map)
         for hourly_item in data_values:
-            map_key = default_map[hourly_item]
-            item.pop(hourly_item)
-            data_array = transform_data(time_data, hourly_item, map_key)
+            data_array = transform_data(time_data, hourly_item, hourly_item)
             for each_data in data_array:
                 i += 1
                 each_data.update(item)
