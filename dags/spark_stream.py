@@ -15,18 +15,19 @@ from cassandra.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
+hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 
 sample_schema = (
     StructType()
     .add("id", StringType())
-    .add("latitude" , DecimalType())
-    .add("longitude", DecimalType())
+    .add("latitude" , DecimalType(scale=6))
+    .add("longitude", DecimalType(scale=6))
     .add("date_time", TimestampType())
-    .add("generationtime_ms", DecimalType())
-    .add("utc_offset_seconds", DecimalType())
+    .add("generationtime_ms", DecimalType(scale=10))
+    .add("utc_offset_seconds", DecimalType(scale=2))
     .add("timezone", StringType())
     .add("timezone_abbreviation", StringType())
-    .add("elevation", DecimalType())
+    .add("elevation", DecimalType(scale=2))
     .add("weather_value", DecimalType())
 )
 
@@ -81,7 +82,7 @@ def write_stream_data():
         .option("checkpointLocation", '/tmp/check_point/')\
         .format("org.apache.spark.sql.cassandra")\
         .option("keyspace", "analytics")\
-        .option("table", "hourlydata")\
+        .option("table", "dailydata")\
         .mode("append") \
         .save()
         # .start()
@@ -104,7 +105,7 @@ def create_cassandra_connection():
 
 def create_table(session):
     session.execute("""
-    CREATE TABLE IF NOT EXISTS analytics.hourlydata (
+    CREATE TABLE IF NOT EXISTS analytics.dailydata (
         id TEXT PRIMARY KEY,
         latitude DECIMAL,
         longitude DECIMAL,
