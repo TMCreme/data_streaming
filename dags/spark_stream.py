@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
     StringType, StructType, IntegerType,
-    DecimalType, TimestampType
+    DecimalType, TimestampType, ArrayType
 )
 
 from cassandra.cluster import Cluster
@@ -30,6 +30,8 @@ sample_schema = (
     .add("elevation", DecimalType(scale=2))
     .add("weather_value", DecimalType())
 )
+
+array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
@@ -69,7 +71,7 @@ def read_stream(spark_session):
         .load()
     
     df = df.selectExpr("CAST(value AS STRING)")
-    parsed_df = df.select(from_json(col("value"), sample_schema).alias("parsed_value"))
+    parsed_df = df.withColumn("parsed_value", from_json(col("value"), array_schema))
 
     # Explode the array into individual rows
     exploded_df = parsed_df.select(explode(col("parsed_value")).alias("item"))
