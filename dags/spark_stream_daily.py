@@ -15,7 +15,7 @@ from cassandra.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
-daily_data_table_name = os.environ.get("HOURLY_SINK_TABLE", "hourlydata")
+daily_data_table_name = os.environ.get("DAILY_SINK_TABLE", "hourlydata")
 cassandra_keyspace = os.environ.get("CASSANDRA_KEYSPACE", "analytics")
 bootstrap_server = "kafka:9092"
 
