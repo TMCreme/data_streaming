@@ -137,8 +137,8 @@ def hourly_main():
         data_values = item.pop("hourly", None)
         time_data = data_values.pop("time")
         # item.update(default_map)
-        for hourly_item in data_values:
-            data_array = transform_data(time_data, hourly_item, hourly_item)
+        for hourly_key, hourly_val in data_values.items():
+            data_array = transform_data(time_data, hourly_val, hourly_key)
             for each_data in data_array:
                 i += 1
                 each_data.update(item)
