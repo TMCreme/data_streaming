@@ -96,11 +96,11 @@ def get_daily_data():
     return response.json()
 
 
-def transform_data(time_values, data_values) -> list:
+def transform_data(time_values, data_values, data_key = "weather_value") -> list:
     """"""
     time_data = time_values
     weather_data = data_values
-    result = [{"id": str(uuid4()), "date_time": date, "weather_value": value} for date, value in zip(time_data, weather_data)]
+    result = [{"id": str(uuid4()), "date_time": date, data_key: value} for date, value in zip(time_data, weather_data)]
 
     return result
 
@@ -132,10 +132,15 @@ def hourly_main():
     i = 0
     for item in response_data:
         hourly_units = item.pop("hourly_units", None)
+        hourly_units.pop("time")
+        default_map = dict.fromkeys(hourly_units, 0)
         data_values = item.pop("hourly", None)
         time_data = data_values.pop("time")
+        item.update(default_map)
         for hourly_item in data_values:
-            data_array = transform_data(time_data, hourly_item)
+            map_key = default_map[hourly_item]
+            item.pop(hourly_item)
+            data_array = transform_data(time_data, hourly_item, map_key)
             for each_data in data_array:
                 i += 1
                 each_data.update(item)
