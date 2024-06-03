@@ -5,7 +5,7 @@ Loading to Cassadra
 import os
 import logging
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
     StringType, StructType, IntegerType,
     DecimalType, TimestampType
@@ -66,13 +66,33 @@ def read_stream(spark_session):
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
-        .load()\
-        .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
-        .select("data.*")
-    df.printSchema()
-    df.show()
+        .load()
+    
+    df = df.selectExpr("CAST(value AS STRING)")
+    parsed_df = df.select(from_json(col("value"), sample_schema).alias("parsed_value"))
+
+    # Explode the array into individual rows
+    exploded_df = parsed_df.select(explode(col("parsed_value")).alias("item"))
+
+    # Select the fields from the exploded items
+    final_df = exploded_df.select(
+        col("item.id"),
+        col("item.latitude"),
+        col("item.longitude"),
+        col("item.date_time"),
+        col("item.generationtime_ms"),
+        col("item.utc_offset_seconds"),
+        col("item.timezone"),
+        col("item.timezone_abbreviation"),
+        col("item.elevation"),
+        col("item.weather_value")
+        )
+        # .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        # .select("data.*")
+    final_df.printSchema()
+    final_df.show()
     # my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
-    return df
+    return final_df
 
 
 def write_stream_data():
