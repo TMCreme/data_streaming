@@ -18,7 +18,7 @@ daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
 sample_schema = (
     StructType()
-    .add("id", IntegerType())
+    .add("id", StringType())
     .add("latitude" , DecimalType())
     .add("longitude", DecimalType())
     .add("date_time", TimestampType())
@@ -69,6 +69,7 @@ def read_stream(spark_session):
         .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
         .select("data.*")
     df.printSchema()
+    df.show()
     # my_df = df.selectExpr("CAST(value as STRING)", "timestamp")
     return df
 
