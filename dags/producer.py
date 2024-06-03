@@ -14,7 +14,7 @@ load_dotenv()
 
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 
-bootstrap_servers = '3.255.212.165:29092'
+bootstrap_servers = '3.252.79.128:29092'
 config = {
     "bootstrap.servers": bootstrap_servers,
     "queue.buffering.max.messages": 1,
@@ -98,12 +98,12 @@ def shutdown():
     running = False
 
 
-# if __name__ == "__main__":
-#     message = [1,2,3,4,5,6]
+if __name__ == "__main__":
+    # message = [1,2,3,4,5,6]
 
-#     for i in range(5):
-#         produce_message(message=message)
-#         print(f"Iteration: {i+1}")
-#     # p.close()
+    # for i in range(5):
+    #     produce_message(message=message)
+    #     print(f"Iteration: {i+1}")
+    # p.close()
     
-#     basic_consume_loop(consumer, [daily_topic])
+    basic_consume_loop(consumer, [daily_topic])
