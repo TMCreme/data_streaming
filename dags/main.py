@@ -118,8 +118,8 @@ def daily_main():
     for item in data_dict:
         item.update(response_data[0])
         yield (json.dumps(i), json.dumps(item))
-    # json_str =json.dumps(data_dict)
-    # print(json_str)
+    json_str =json.dumps(data_dict)
+    print(json_str)
     # json_bytes = json_str.encode('utf-8')
     #produce_message(message=data_dict)
     # asyncio.run(consume())

@@ -63,7 +63,8 @@ def read_stream(spark_session):
         .format("kafka") \
         .option("kafka.bootstrap.servers", "kafka:9092") \
         .option("subscribe", daily_topic) \
-        .option("startingOffsets", "latest") \
+        .option("startingOffsets", "earliest") \
+        .option("endingOffsets", "latest") \
         .load()\
         .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
         .select("data.*")
