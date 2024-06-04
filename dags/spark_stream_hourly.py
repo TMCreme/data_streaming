@@ -3,6 +3,7 @@ Spark Stream processing Hourly - Consuming from Kafka
 Loading to Cassadra
 """
 import os
+import json
 import logging
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, explode
@@ -41,7 +42,7 @@ sample_schema = (
     .add("precipitation", DecimalType(scale=4))
 )
 
-# array_schema = ArrayType(sample_schema)
+array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
@@ -78,16 +79,17 @@ def read_stream(spark_session):
         .option("subscribe", hourly_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
-        .load()
-        # .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        .load()\
+        .select(from_json(col("value").cast("string"), array_schema).alias("data"))
         # .select("data.*")
-    messages_df = df.selectExpr("CAST(value AS STRING)")
-    json_df = messages_df.withColumn("value", from_json(col("value"), sample_schema))
-    parsed_df = json_df.select(col("value.*"))
+    # df = df.selectExpr("CAST(value AS STRING)")
+    df.show(truncate=False)
+    df_exploded = df.withColumn("json", explode(col("data"))) \
+    .select("json.*")
 
-    parsed_df.printSchema()
-    parsed_df.show()
-    return parsed_df
+    df_exploded.printSchema()
+    df_exploded.show()
+    return df_exploded
 
 
 def write_stream_data():

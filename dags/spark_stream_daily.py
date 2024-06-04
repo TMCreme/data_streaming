@@ -3,9 +3,10 @@ Spark Stream processing - Consuming from Kafka
 Loading to Cassadra
 """
 import os
+import json
 import logging
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, explode
+from pyspark.sql.functions import from_json, col, explode, udf
 from pyspark.sql.types import (
     StringType, StructType, IntegerType,
     DecimalType, TimestampType, ArrayType, StructField
@@ -19,7 +20,7 @@ daily_data_table_name = os.environ.get("DAILY_SINK_TABLE", "dailydata")
 cassandra_keyspace = os.environ.get("CASSANDRA_KEYSPACE", "analytics")
 bootstrap_server = "kafka:9092"
 
-    
+
 # sample_schema = StructType([
 #     StructField("id", StringType(), True),
 #     StructField("date_time", TimestampType(), True),
@@ -46,7 +47,7 @@ sample_schema = (
     .add("weather_value", DecimalType())
 )
 
-# array_schema = ArrayType(sample_schema)
+array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
@@ -83,16 +84,18 @@ def read_stream(spark_session):
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
-        .load()
-        # .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        .load()\
+        .select(from_json(col("value").cast("string"), array_schema).alias("data"))
         # .select("data.*")
-    messages_df = df.selectExpr("CAST(value AS STRING)")
-    json_df = messages_df.withColumn("value", from_json(col("value"), sample_schema))
-    parsed_df = json_df.select(col("value.*"))
+    # df = df.selectExpr("CAST(value AS STRING)")
+    df.show()
+    df_exploded = df.withColumn("json", explode(col("data"))) \
+    .select("json.*")
+    df.show(truncate=False)
 
-    parsed_df.printSchema()
-    parsed_df.show()
-    return parsed_df
+    df_exploded.printSchema()
+    df_exploded.show()
+    return df_exploded
 
 
 def write_stream_data():
