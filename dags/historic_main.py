@@ -117,11 +117,11 @@ def daily_main():
 
         data_dict = transform_data(data_values["time"], data_values["weather_code"])
  
+        i += 1
         for new_item in data_dict:
-            i += 1
             new_item.update(item)
             print(json.dumps(new_item))
-            yield (json.dumps(i), json.dumps(new_item))
+        yield (json.dumps(i), json.dumps(data_dict))
 
 
 def hourly_main():
@@ -139,11 +139,11 @@ def hourly_main():
         # item.update(default_map)
         for hourly_key, hourly_val in data_values.items():
             data_array = transform_data(time_data, hourly_val, hourly_key)
+            i += 1
             for each_data in data_array:
-                i += 1
                 each_data.update(item)
-                json_str = json.dumps(each_data)
-                yield (json.dumps(i), json_str)
+            json_str = json.dumps(data_array)
+            yield (json.dumps(i), json_str)
 
 
 with DAG(
