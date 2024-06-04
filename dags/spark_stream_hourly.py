@@ -2,25 +2,30 @@
 Spark Stream processing Hourly - Consuming from Kafka
 Loading to Cassadra
 """
+# Import necessary packages
 import os
-import json
 import logging
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
-    StringType, StructType, IntegerType,
-    DecimalType, TimestampType, ArrayType, StructField
+    StringType, StructType,
+    DecimalType, TimestampType, ArrayType,
 )
+
+from dotenv import load_dotenv
 
 from cassandra.cluster import Cluster
 
+load_dotenv()
+
+# Declare needed variables
 logger = logging.getLogger(__name__)
 hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 hourly_data_table_name = os.environ.get("HOURLY_SINK_TABLE", "hourlydata")
 cassandra_keyspace = os.environ.get("CASSANDRA_KEYSPACE", "analytics")
 bootstrap_server = "kafka:9092"
 
-
+# Schema for the hourly table in cassandra. This can be changed based on the hourly metrics needed
 sample_schema = (
     StructType()
     .add("id", StringType())
@@ -42,10 +47,13 @@ sample_schema = (
     .add("precipitation", DecimalType(scale=4))
 )
 
+# Convert schema to array due to structure of data being produced in Kafka
+# Use the sample_schema (StructType) if it's a single json data
 array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
+    """Create the spark connection to be used for other interaction and processing"""
     spark = (
         SparkSession.builder.appName("WeatherAppHourly")\
             .config("spark.cassandra.connection.host", "cassandra_db")\
@@ -62,6 +70,7 @@ def stop_spark(spark_session):
 
 
 def create_keyspace(session):
+    """Create the cassandra keyspace on the database"""
     session.execute("""
         CREATE KEYSPACE IF NOT EXISTS analytics
         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
@@ -71,7 +80,10 @@ def create_keyspace(session):
 
 
 def read_stream(spark_session):
-    """Define the subscription to kafka topic and read stream"""
+    """
+    Define the subscription to kafka topic and read stream
+    In reading, conert the json string to a string and explode
+    """
     df = spark_session \
         .read \
         .format("kafka") \
@@ -81,9 +93,10 @@ def read_stream(spark_session):
         .option("endingOffsets", "latest") \
         .load()\
         .select(from_json(col("value").cast("string"), array_schema).alias("data"))
-        # .select("data.*")
-    # df = df.selectExpr("CAST(value AS STRING)")
+
     df.show(truncate=False)
+    
+    # Run explode on the data into a json column then select that column data
     df_exploded = df.withColumn("json", explode(col("data"))) \
     .select("json.*")
 
@@ -93,6 +106,7 @@ def read_stream(spark_session):
 
 
 def write_stream_data():
+    """Write the data into the cassandra db table, then stop the spark session """
     spark = spark_connect()
     stream_data = read_stream(spark)
     stream_data.write\
@@ -108,6 +122,7 @@ def write_stream_data():
 
 
 def create_cassandra_connection():
+    """Cassandra connection that is used to create the keyspace and table"""
     try:
         # connecting to the cassandra cluster
         cluster = Cluster(['cassandra_db'], port=9042, )
@@ -121,6 +136,7 @@ def create_cassandra_connection():
 
 
 def create_table(session):
+    """Create table statement for Cassandra"""
     session.execute(f"""
     CREATE TABLE IF NOT EXISTS {cassandra_keyspace}.{hourly_data_table_name} (
         id TEXT PRIMARY KEY,

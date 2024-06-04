@@ -1,38 +1,31 @@
 """
-Spark Stream processing - Consuming from Kafka
+Spark Stream processing daily - Consuming from Kafka
 Loading to Cassadra
 """
+# Import the necessary packages
 import os
-import json
 import logging
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, explode, udf
+from pyspark.sql.functions import from_json, col, explode
 from pyspark.sql.types import (
-    StringType, StructType, IntegerType,
-    DecimalType, TimestampType, ArrayType, StructField
+    StringType, StructType,
+    DecimalType, TimestampType, ArrayType
 )
+
+from dotenv import load_dotenv
 
 from cassandra.cluster import Cluster
 
+load_dotenv()
+
+# Declare needed variables
 logger = logging.getLogger(__name__)
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 daily_data_table_name = os.environ.get("DAILY_SINK_TABLE", "dailydata")
 cassandra_keyspace = os.environ.get("CASSANDRA_KEYSPACE", "analytics")
 bootstrap_server = "kafka:9092"
 
-
-# sample_schema = StructType([
-#     StructField("id", StringType(), True),
-#     StructField("date_time", TimestampType(), True),
-#     StructField("weather_value", DecimalType(), True),
-#     StructField("latitude" , DecimalType(), True),
-#     StructField("longitude", DecimalType(), True),
-#     StructField("generationtime_ms", DecimalType(), True),
-#     StructField("utc_offset_seconds", DecimalType(), True),
-#     StructField("timezone", StringType(), True),
-#     StructField("timezone_abbreviation", StringType(), True),
-#     StructField("elevation", DecimalType(), True)
-# ])
+# Table Schema for the daily data table. This can change depending on the type of daily metrics
 sample_schema = (
     StructType()
     .add("id", StringType())
@@ -47,10 +40,13 @@ sample_schema = (
     .add("weather_value", DecimalType())
 )
 
+# Convert to an array schema due to the expected data. 
+# Use the sample_schema if data is a single json but if an array of jsons, use array_schema
 array_schema = ArrayType(sample_schema)
 
 
 def spark_connect():
+    """Create the spark connection to be used for other interaction and processing"""
     spark = (
         SparkSession.builder.appName("WeatherApp")\
             .config("spark.cassandra.connection.host", "cassandra_db")\
@@ -67,6 +63,7 @@ def stop_spark(spark_session):
 
 
 def create_keyspace(session):
+    """Create the cassandra keyspace on the database"""
     session.execute("""
         CREATE KEYSPACE IF NOT EXISTS analytics
         WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'};
@@ -76,7 +73,10 @@ def create_keyspace(session):
 
 
 def read_stream(spark_session):
-    """Define the subscription to kafka topic and read stream"""
+    """
+    Define the subscription to kafka topic and read batch data or stream data
+    In reading, conert the json string to a string and explode
+    """
     df = spark_session \
         .read \
         .format("kafka") \
@@ -86,12 +86,12 @@ def read_stream(spark_session):
         .option("endingOffsets", "latest") \
         .load()\
         .select(from_json(col("value").cast("string"), array_schema).alias("data"))
-        # .select("data.*")
-    # df = df.selectExpr("CAST(value AS STRING)")
-    df.show()
+
+    df.show(truncate=False)
+    
+    # Run explode on the data into a json column then select that column data
     df_exploded = df.withColumn("json", explode(col("data"))) \
     .select("json.*")
-    df.show(truncate=False)
 
     df_exploded.printSchema()
     df_exploded.show()
@@ -99,6 +99,7 @@ def read_stream(spark_session):
 
 
 def write_stream_data():
+    """Write the data into the cassandra db table, then stop the spark session """
     spark = spark_connect()
     stream_data = read_stream(spark)
     stream_data.write\
@@ -114,6 +115,7 @@ def write_stream_data():
 
 
 def create_cassandra_connection():
+    """Cassandra connection that is used to create the keyspace and table"""
     try:
         # connecting to the cassandra cluster
         cluster = Cluster(['cassandra_db'], port=9042, )
@@ -127,6 +129,7 @@ def create_cassandra_connection():
 
 
 def create_table(session):
+    """Create table statement for Cassandra"""
     session.execute(f"""
     CREATE TABLE IF NOT EXISTS {cassandra_keyspace}.{daily_data_table_name} (
         id TEXT PRIMARY KEY,
