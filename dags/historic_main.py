@@ -26,7 +26,7 @@ hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 
 
 default_args = {
-    "owner": "admin",
+    "owner": "airflow",
     "depends_on_past": False,
     "start_date": datetime.today(),
     "email_on_failure": False,

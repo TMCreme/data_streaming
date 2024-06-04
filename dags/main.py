@@ -28,10 +28,13 @@ logger = logging.getLogger(__name__)
 # Environmental Variables
 daily_topic = os.environ.get("DAILY_DATA_TOPIC", "dailymetrics")
 hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
+start_date = datetime.today().strftime("%Y-%m-%d")
+end_date = start_date
+
 
 # Default Airflow DAG arguments
 default_args = {
-    "owner": "admin",
+    "owner": "airflow",
     "depends_on_past": False,
     "start_date": datetime.today(),
     "email_on_failure": False,
@@ -57,6 +60,7 @@ with DAG(
         kafka_config_id="kafka_default",
         topic=daily_topic,
         producer_function=daily_main,
+        producer_function_args=(start_date, end_date),
         poll_timeout=10,
     )
 

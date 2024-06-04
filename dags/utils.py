@@ -6,7 +6,7 @@ import os
 import requests
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 
 # Third-Party packages
@@ -28,26 +28,15 @@ hourly_topic = os.environ.get("HOURLY_DATA_TOPIC", "hourlymetrics")
 latitudes = Variable.get("latitudes", default_var="52.5244,52.3471,53.5507,48.1374,50.1155")
 longitudes = Variable.get("longitudes", default_var="13.4105,14.5506,9.993,11.5755,8.6842")
 hourly = Variable.get(
-    "hourly", "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,surface_pressure,temperature_80m")
+    "hourly", default_var="temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,rain,surface_pressure,temperature_80m")
 daily = Variable.get("daily", default_var="weather_code")
 
 # Date Range variables
-start_date = datetime.today().strftime("%Y-%m-%d")
-end_date = start_date
-
-# Default Airflow DAG arguments
-default_args = {
-    "owner": "admin",
-    "depends_on_past": False,
-    "start_date": datetime.today(),
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=1),
-}
+start_date = Variable.get("start_date", "2024-05-01")
+end_date = Variable.get("end_date", "2024-05-28")
 
 
-def get_request_paramters() -> dict:
+def get_request_paramters(start_date, end_date) -> dict:
     """Create a dictionary of the request parameters for the queries"""
     try:
         logger.info("Variables returned suffessfully")
@@ -65,10 +54,10 @@ def get_request_paramters() -> dict:
         return False
 
 
-def get_hourly_data():
+def get_hourly_data(start_date, end_date):
     """Get hourly data from the API endpoint"""
     try:
-        request_parameters = get_request_paramters()
+        request_parameters = get_request_paramters(start_date, end_date)
         # Remove the daily parameters to only get hourly parameters
         request_parameters.pop("daily")
         print(request_parameters)
@@ -95,10 +84,10 @@ def get_hourly_data():
         return False
 
 
-def get_daily_data():
+def get_daily_data(start_date, end_date):
     """Get the daily data from the API Endpoint"""
     try:
-        request_parameters = get_request_paramters()
+        request_parameters = get_request_paramters(start_date, end_date)
         print(request_parameters)
         if request_parameters:
             # Remove the hourly parameters to only get daily parameters
@@ -137,9 +126,9 @@ def transform_data(time_values, data_values, data_key = "weather_value") -> list
         return False
 
 
-def daily_main():
+def daily_main(start_date=start_date, end_date=end_date):
     """Process the daily data for loading"""
-    response_data = get_daily_data()
+    response_data = get_daily_data(start_date, end_date)
     # data_keys = response_data["daily_units"].keys()
     items_to_remove = ("daily_units", "daily")
     i = 0
@@ -156,9 +145,9 @@ def daily_main():
             yield (json.dumps(i), json.dumps(new_item))
 
 
-def hourly_main():
+def hourly_main(start_date=start_date, end_date=end_date):
     """Process the hourly data coming in. """
-    response_data = get_hourly_data()
+    response_data = get_hourly_data(start_date, end_date)
     lat_long_map = list(zip(latitudes.split(","), longitudes.split(",")))
 
     i = 0
