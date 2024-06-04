@@ -83,13 +83,16 @@ def read_stream(spark_session):
         .option("subscribe", daily_topic) \
         .option("startingOffsets", "earliest") \
         .option("endingOffsets", "latest") \
-        .load()\
-        .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
-        .select("data.*")
+        .load()
+        # .select(from_json(col("value").cast("string"), sample_schema).alias("data"))\
+        # .select("data.*")
+    messages_df = df.selectExpr("CAST(value AS STRING)")
+    json_df = messages_df.withColumn("value", from_json(col("value"), sample_schema))
+    parsed_df = json_df.select(col("value.*"))
 
-    df.printSchema()
-    df.show()
-    return df
+    parsed_df.printSchema()
+    parsed_df.show()
+    return parsed_df
 
 
 def write_stream_data():
