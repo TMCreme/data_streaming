@@ -141,8 +141,8 @@ def daily_main(start_date=start_date, end_date=end_date):
         for new_item in data_dict:
             i += 1
             new_item.update(item)
-            print(json.dumps(new_item))
-            yield (json.dumps(i), json.dumps(new_item))
+        print(json.dumps(data_dict))
+        yield (json.dumps(i), json.dumps(data_dict))
 
 
 def hourly_main(start_date=start_date, end_date=end_date):
@@ -163,5 +163,5 @@ def hourly_main(start_date=start_date, end_date=end_date):
             for each_data in data_array:
                 i += 1
                 each_data.update(item)
-                json_str = json.dumps(each_data)
-                yield (json.dumps(i), json_str)
+            json_str = json.dumps(data_array)
+            yield (json.dumps(i), json_str)
