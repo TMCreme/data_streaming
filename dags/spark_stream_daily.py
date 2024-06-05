@@ -29,7 +29,7 @@ bootstrap_server = "kafka:9092"
 sample_schema = (
     StructType()
     .add("id", StringType())
-    .add("latitude" , DecimalType(scale=6))
+    .add("latitude", DecimalType(scale=6))
     .add("longitude", DecimalType(scale=6))
     .add("date_time", TimestampType())
     .add("generationtime_ms", DecimalType(scale=10))
@@ -40,7 +40,7 @@ sample_schema = (
     .add("weather_value", DecimalType())
 )
 
-# Convert to an array schema due to the expected data. 
+# Convert to an array schema due to the expected data.
 # Use the sample_schema if data is a single json but if an array of jsons, use array_schema
 array_schema = ArrayType(sample_schema)
 
@@ -48,13 +48,14 @@ array_schema = ArrayType(sample_schema)
 def spark_connect():
     """Create the spark connection to be used for other interaction and processing"""
     spark = (
-        SparkSession.builder.appName("WeatherApp")\
-            .config("spark.cassandra.connection.host", "cassandra_db")\
-            .config("spark.cassandra.connection.port", 9042)
-                .getOrCreate()
+        SparkSession.builder.appName("WeatherApp")
+        .config("spark.cassandra.connection.host", "cassandra_db")
+        .config("spark.cassandra.connection.port", 9042)
+        .getOrCreate()
     )
     # spark.conf.set("spark.sql.shuffle.partitions", 1000)
     return spark
+
 
 def stop_spark(spark_session):
     """Stop the spark session"""
@@ -87,11 +88,9 @@ def read_stream(spark_session):
         .load()\
         .select(from_json(col("value").cast("string"), array_schema).alias("data"))
 
-    df.show(truncate=False)
-    
     # Run explode on the data into a json column then select that column data
     df_exploded = df.withColumn("json", explode(col("data"))) \
-    .select("json.*")
+        .select("json.*")
 
     df_exploded.printSchema()
     df_exploded.show()
@@ -109,7 +108,6 @@ def write_stream_data():
         .option("table", daily_data_table_name)\
         .mode("append") \
         .save()
-        # .start()
 
     stop_spark(spark)
 

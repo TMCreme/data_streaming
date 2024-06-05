@@ -130,14 +130,14 @@ def daily_main(start_date=start_date, end_date=end_date):
     """Process the daily data for loading"""
     response_data = get_daily_data(start_date, end_date)
     # data_keys = response_data["daily_units"].keys()
-    items_to_remove = ("daily_units", "daily")
+    # items_to_remove = ("daily_units", "daily")
     i = 0
     for item in response_data:
         data_values = item.pop("daily")
         item.pop("daily_units")
 
         data_dict = transform_data(data_values["time"], data_values["weather_code"])
- 
+
         for new_item in data_dict:
             i += 1
             new_item.update(item)
@@ -148,7 +148,7 @@ def daily_main(start_date=start_date, end_date=end_date):
 def hourly_main(start_date=start_date, end_date=end_date):
     """Process the hourly data coming in. """
     response_data = get_hourly_data(start_date, end_date)
-    lat_long_map = list(zip(latitudes.split(","), longitudes.split(",")))
+    # lat_long_map = list(zip(latitudes.split(","), longitudes.split(",")))
 
     i = 0
     for item in response_data:
