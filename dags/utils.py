@@ -6,7 +6,7 @@ import os
 import requests
 import json
 import logging
-from datetime import datetime
+# from datetime import datetime
 from uuid import uuid4
 
 # Third-Party packages
@@ -113,7 +113,7 @@ def get_daily_data(start_date, end_date):
         return False
 
 
-def transform_data(time_values, data_values, data_key = "weather_value") -> list:
+def transform_data(time_values, data_values, data_key="weather_value") -> list:
     """Generic data transformation in an ingestible format for kafka and spark"""
     try:
         time_data = time_values
@@ -154,7 +154,7 @@ def hourly_main(start_date=start_date, end_date=end_date):
     for item in response_data:
         hourly_units = item.pop("hourly_units", None)
         hourly_units.pop("time")
-        default_map = dict.fromkeys(hourly_units, 0)
+        # default_map = dict.fromkeys(hourly_units, 0)
         data_values = item.pop("hourly", None)
         time_data = data_values.pop("time")
         # item.update(default_map)
